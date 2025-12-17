@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.log import DailyLog
-from datetime import date
+from app.models.employee import Employee
+from datetime import date, datetime
 
 def submit_log(
     db: Session,
@@ -8,26 +9,23 @@ def submit_log(
     site_id: int,
     weather: str,
     work_done: str,
-    safety_note: str,
-    materials: list,
-    photos: list
+    safety_note: str = "",
+    materials: list = None,
+    photos_arrays: list = None
 ):
-
-    if material is None:
-        materials = []
-    if photos is None:
-        photos = []
+    employee = db.query(Employee).filter(Employee.emp_code == emp_id).first()
+    if not employee:
+        raise ValueError(f"Employee {emp_id} not found")
 
     log = DailyLog(
-        employee_id=emp_id,
+        emp_id=emp_id,
         site_id=site_id,
-        date=date.today(),
         weather=weather,
         work_done=work_done,
-        safety_note=safety_note,
-        materials_used=materials,
-        photos=len(photos),
-        submit_at=datetime.utcnow()
+        safety_note=safety_note or "",
+        materials_used=materials or [],
+        photos=photos_arrays or [],
+        submitted_at=datetime.utcnow()
     )
     db.add(log)
     db.commit()

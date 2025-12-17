@@ -9,13 +9,7 @@ def create_qr(
     project_start: date,
     project_end: date
 ):
-    qr_data = (
-        f"OBGGD:SITE:{site_name}"
-        f"|LOC:{location}"
-        f"|START:{project_start}"
-        f"|END:{project_end}"
-    )
-    
+    qr_data = f"OBGGD:SITE:{site_name}|LOC:{location}|START:{project_start}|END:{project_end}"
     qr = QRCode(
         site_name=site_name,
         location=location,
@@ -23,7 +17,6 @@ def create_qr(
         project_end=project_end,
         qr_data=qr_data
     )
-    
     db.add(qr)
     db.commit()
     db.refresh(qr)

@@ -19,26 +19,18 @@ class QRRequest(BaseModel):
 
 @router.post("/")
 def make(request: QRRequest, db: Session = Depends(get_db)):
-    qr = create_qr(
-        db,
-        request.site_name,
-        request.location,
-        request.project_start,
-        request.project_end
-    )
+    qr = create_qr(db, request.site_name, request.location, request.project_start, request.project_end)
     return {
-        "message": f"QR ready for {qr.site_name}",
+        "message": "QR created",
         "site_id": qr.id,
-        "location": qr.location,
-        "qr_data": qr.qr_data,
-        "image_url": f"/qrcode/{qr.site_name}/image"
+        "qr_data": qr.qr_data
     }
 
 @router.get("/{site_name}/image")
 def image(site_name: str, db: Session = Depends(get_db)):
     qr = db.query(QRCode).filter(QRCode.site_name == site_name).first()
     if not qr:
-        return {"error": "Generate first"}
+        raise HTTPException(404, "QR not found")
     img = qrcode.make(qr.qr_data)
     buf = BytesIO()
     img.save(buf, "PNG")
@@ -48,13 +40,4 @@ def image(site_name: str, db: Session = Depends(get_db)):
 @router.get("/all")
 def get_all_sites(db: Session = Depends(get_db)):
     sites = db.query(QRCode).all()
-    return [
-        {
-            "id": s.id,
-            "site_name": s.site_name,
-            "location": s.location,
-            "project_start": s.project_start.isoformat(),
-            "project_end": s.project_end.isoformat()
-        }
-        for s in sites
-    ]
+    return [{"id": s.id, "site_name": s.site_name, "location": s.location, "project_start": s.project_start.isoformat(), "project_end": s.project_end.isoformat()} for s in sites]
